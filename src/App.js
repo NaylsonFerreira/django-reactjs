@@ -1,25 +1,15 @@
-import logo from './logo.svg';
-import './App.css';
+import * as React from "react";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+import { Admin, Resource } from 'react-admin';
+import dataProvider from './providers/dataProvider';
+import authProvider from './providers/authProvider';
+import { Login } from "ra-ui-materialui";
+import RTU from "./resources/RTU";
+
+const App = () => (
+  <Admin dataProvider={dataProvider} authProvider={authProvider} loginPage={Login}  >
+    <Resource name="RTU" list={RTU.list} />
+  </Admin>
+);
 
 export default App;
