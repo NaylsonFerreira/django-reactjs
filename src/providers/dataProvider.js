@@ -1,14 +1,17 @@
 import { fetchUtils } from 'react-admin';
 import { stringify } from 'query-string';
 
-export const apiUrl = 'http://192.168.1.239/api/';
-const httpClient = (url, options = {}) => {
-    if (!options.headers) {
-        options.headers = new Headers({ Accept: 'application/json' });
-    }
-    const { token } = JSON.parse(localStorage.getItem('auth'));
-    options.headers.set('Authorization', `Bearer ${token}`);
-    return fetchUtils.fetchJson(url, options);
+export const apiUrl = 'http://192.168.1.239/api';
+export const httpClient = (url, options = {}) => {
+    const token = localStorage.getItem('token');
+    const locale = localStorage.getItem('locale');
+    const headers = new Headers({
+        'Accept-Language': locale,
+        'Authorization': token,
+        ...options?.headers,
+    });
+
+    return fetchUtils.fetchJson(url, { ...options, headers });
 };
 
 export const dataProvider = {
@@ -17,15 +20,17 @@ export const dataProvider = {
         const { field, order } = params.sort;
         const query = {
             sort: JSON.stringify([field, order]),
-            range: JSON.stringify([(page - 1) * perPage, page * perPage - 1]),
-            filter: JSON.stringify(params.filter),
+            limit: perPage,
+            offset: (page - 1) * perPage,
+            // offset: page * perPage - 1,
+            // filter: JSON.stringify(params.filter),
         };
         const url = `${apiUrl}/${resource}?${stringify(query)}`;
 
-        const { headers, json } = await httpClient(url);
+        const { json } = await httpClient(url);
         return ({
-            data: json,
-            total: parseInt(headers.get('content-range').split('/').pop(), 10),
+            data: json.results,
+            total: parseInt(json.count, 10),
         });
     },
 
