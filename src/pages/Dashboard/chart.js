@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react'
-
+import React, { useRef, useEffect, useState } from 'react'
+import { useDataProvider } from 'react-admin';
 const Canvas = props => {
 
     const canvasRef = useRef(null);
@@ -8,58 +8,56 @@ const Canvas = props => {
         width: '100%',
     }
 
-    const draw = (canvas) => {
+    const dataProvider = useDataProvider();
+    const [matrix, setMatrix] = useState([]);
+
+    const [min_channel, max_channel, seconds, intensity] = [0, 300, 50, 1];
+    const channels = max_channel - min_channel;
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
         const context = canvas.getContext('2d')
         // context.imageSmoothingQuality = "high";
-        context.imageSmoothingEnabled = false;
+        // context.imageSmoothingEnabled = false;
         context.clearRect(0, 0, context.canvas.width, context.canvas.height);
         // const [screenWidth, screenHeight] = [canvas.clientWidth, canvas.clientHeight];
-
-        const [canais, tempo] = [300, 50];
-        const r1 = generateFrame(canais, tempo);
         // 300x148
 
-        const w = 300 / canais;
-        const h = 150 / tempo;
-        // context.fillRect(0, 0, w, h);
-        // context.fillRect(50 + 5, 0, w, h);
-        // context.fillRect(100 + 10, 0, w, h);
-        // context.fillRect(150 + 15, 0, w, h);
-        for (let j = 0; j < tempo; j++) {
-            const py = h * j;
-            for (let i = 0; i < canais; i++) {
-                const px = (w * i);
-                let x = "rgb(0,0," + r1[j][i] + ")";
-                context.fillStyle = x;
+        const w = 300 / channels;
+        const h = 150 / seconds;
+
+        for (let second = 0; second < seconds; second++) {
+            const py = h * second;
+            for (let channel = 0; channel < channels; channel++) {
+                const px = (w * channel);
+                // Plot
+                if (second < matrix.length) {
+                    const c = matrix[second][channel];
+                    let x = `rgb(0,${c * intensity},60)`;
+                    context.fillStyle = x;
+                }
                 context.fillRect(px, py, w, h);
             }
         }
-    }
 
-    const getRandomInt = (min, max) => {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min)) + min;
-    }
+    }, [channels, intensity, matrix, seconds]);
 
-    const generateFrame = (canais, tempo) => {
-        const data = [];
-        for (let j = 0; j < tempo; j++) {
-            const line = [];
-            for (let i = 0; i < canais; i++) {
-                const x = getRandomInt(0, 254);
-                line.push(x);
-            }
-            data.push(line);
-        }
-        return data;
-    }
-    const canvas = canvasRef.current;
     useEffect(() => {
-        
-    }, []);
+        dataProvider.create('waterfall', {
+            data: {
+                date_start: "2021-11-09 15:08:00-03",
+                date_end: "2021-11-09 15:09:00-03",
+                channel_start: min_channel,
+                channel_end: max_channel
+            }
+        }).then(({ data }) => {
+            setMatrix(data.json);
+        }).catch(error => {
+            console.log(error);
+        })
 
-    setInterval(() => canvas ? draw(canvas) : () => { }, 1000);
+    }, [dataProvider, max_channel, min_channel]);
+
     return <canvas ref={canvasRef} {...props} style={canvasStyle} />
 }
 

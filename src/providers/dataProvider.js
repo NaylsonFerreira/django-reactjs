@@ -1,7 +1,7 @@
 import { fetchUtils } from 'react-admin';
 import { stringify } from 'query-string';
 
-export const apiUrl = 'http://192.168.1.239/api';
+export const apiUrl = 'http://localhost:8000/api';
 export const httpClient = (url, options = {}) => {
     const token = localStorage.getItem('token');
     const locale = localStorage.getItem('locale');
@@ -89,9 +89,7 @@ export const dataProvider = {
         httpClient(`${apiUrl}/${resource}`, {
             method: 'POST',
             body: JSON.stringify(params.data),
-        }).then(({ json }) => ({
-            data: { ...params.data, id: json.id },
-        })),
+        }).then((response) => ({ data: { ...response, id: response.id || 0, } })),
 
     delete: (resource, params) =>
         httpClient(`${apiUrl}/${resource}/${params.id}`, {
