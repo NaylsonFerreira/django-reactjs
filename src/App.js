@@ -6,6 +6,7 @@ import authProvider from './providers/authProvider';
 import { Login } from "ra-ui-materialui";
 import Dashboard from "./pages/Dashboard";
 import binaryFile from "./resources/binaryFiles";
+import rtu from "./resources/rtu";
 
 const App = () => (
   <Admin
@@ -15,6 +16,7 @@ const App = () => (
     dashboard={Dashboard} >
 
     <Resource name="binaryFiles" list={binaryFile.list} />
+    <Resource name="rtu" list={rtu.list} />
 
   </Admin>
 );

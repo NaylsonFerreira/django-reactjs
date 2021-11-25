@@ -1,7 +1,7 @@
 import { fetchUtils } from 'react-admin';
 import { stringify } from 'query-string';
 
-export const apiUrl = 'http://localhost:8000/api';
+export const apiUrl = 'http://192.168.1.101:8000/api';
 export const httpClient = (url, options = {}) => {
     const token = localStorage.getItem('token');
     const locale = localStorage.getItem('locale');
