@@ -1,5 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react'
-import { useDataProvider } from 'react-admin';
+// import { useDataProvider } from 'react-admin';
+import { w3cwebsocket as W3CWebSocket } from "websocket";
+
+const client = new W3CWebSocket('ws://localhost:8000/ws/websocket/');
+
 const now = new Date();
 
 const Canvas = ({
@@ -18,8 +22,9 @@ const Canvas = ({
         width: '100%',
     }
 
-    const dataProvider = useDataProvider();
+    // const dataProvider = useDataProvider();
     const [matrix, setMatrix] = useState([]);
+    const [online, setStatus] = useState(false);
 
     // const [min_channel, max_channel, seconds, intensity] = [0, 2048, 50, 2];
     const channels = max_channel - min_channel;
@@ -45,7 +50,7 @@ const Canvas = ({
         // const [screenWidth, screenHeight] = [canvas.clientWidth, canvas.clientHeight];
         // 300x148
 
-        const frames = seconds / 0.256
+        const frames = seconds / 0.256;
         const w = 300 / channels;
         const h = 150 / frames;
 
@@ -65,23 +70,48 @@ const Canvas = ({
 
     }, [channels, intensity, matrix, seconds]);
 
+    client.onmessage = (message) => {
+        const response = JSON.parse(message.data)
+        setMatrix(response.message);
+    };
+    client.onopen = () => {
+        console.log("connected...");
+        setStatus(true);
+    };
+    client.onclose = () => {
+        console.log("desconnected...");
+        setStatus(false);
+    };
+
     useEffect(() => {
         const [start, end] = nextRequest(date_start);
-        dataProvider.create('waterfall/', {
-            data: {
+        const payload = JSON.stringify(
+            {
                 date_start: start,
                 date_end: end,
                 channel_start: min_channel,
                 channel_end: max_channel
             }
-        }).then(({ data }) => {
-            setMatrix(data.json);
-        }).catch(error => {
-            console.log(error);
-        })
+        )
+        if (online) {
+            client.send(payload);
+        }
+
+        // dataProvider.create('waterfall/', {
+        //     data: {
+        //         date_start: start,
+        //         date_end: end,
+        //         channel_start: min_channel,
+        //         channel_end: max_channel
+        //     }
+        // }).then(({ data }) => {
+        //     setMatrix(data.json);
+        // }).catch(error => {
+        //     console.log(error);
+        // })
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [date_start, max_channel, min_channel, seconds]);
+    }, [date_start, max_channel, min_channel, seconds, online]);
 
     return <canvas ref={canvasRef} {...props} style={canvasStyle} />
 }
